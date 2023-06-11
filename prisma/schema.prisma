@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// @db.Uuid za userId je zato sto cemo se logovati preko Supabase, odatle cemo dobiti uuid
+model Addresses {
+  id         Int       @id @default(autoincrement())
+  userId     String    @unique @db.Uuid
+  name       String
+  address    String
+  zipcode    String
+  city       String
+  country    String
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+// ovo orderItem je relationship za tabelom OrderItem[]. Takodje, stavili smo delivery address i u Order (name, address, zipcode, city, country), tako da sledeci x kada narucimo nesto, ako zelimo da promenimo delivery adresu, mozemo je promeniti samo tamo (Addressess), iona ce se sacuvati unutar Order. Tako da se sve Orders ne promene kada promenis adresu... WTFFFF
+model Orders {
+  id         Int         @id @default(autoincrement())
+  userId     String      @db.Uuid
+  stripeId   String
+  name       String
+  address    String
+  zipcode    String
+  city       String
+  country    String
+  created_at DateTime?   @default(now()) @db.Timestamptz(6)
+  orderItem  OrderItem[]
+}
+
+// ovaj OrderItem pripada orderu; vidimo orderId koji je referenca id-u ordera tj ovo:   id         Int         @id @default(autoincrement())  u Orders. Tako joinujemo orders i order items zajedno
+model OrderItem {
+  id         Int       @id @default(autoincrement())
+  orderId    Int
+  productId  Int
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  order      Orders    @relation(fields: [orderId], references: [id])
+  product    Products  @relation(fields: [productId], references: [id])
+}
+
+model Products {
+  id          Int         @id @default(autoincrement())
+  title       String
+  description String
+  url         String
+  price       Int
+  created_at  DateTime?   @default(now()) @db.Timestamptz(6)
+  orderItem   OrderItem[]
+}
