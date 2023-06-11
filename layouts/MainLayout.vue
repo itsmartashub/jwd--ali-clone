@@ -174,6 +174,8 @@
 	<Loading v-if="userStore.isLoading" />
 
 	<div class="lg:pt-[150px] md:pt-[130px] pt-[80px]" />
+
+	<!-- sadrzaj <MainLayout></MainLayout> komponente -->
 	<slot />
 
 	<Footer v-if="!userStore.isLoading" />
@@ -188,5 +190,3 @@ let isCartHover = ref(false)
 let isSearching = ref(false)
 let searchItem = ref('')
 </script>
-
-<style></style>
