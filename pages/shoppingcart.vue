@@ -1,0 +1,223 @@
+<template>
+	<MainLayout>
+		<main id="ShoppingCartPage" class="mt-4 max-w-[1200px] mx-auto px-2">
+			<section
+				v-if="false"
+				class="h-[500px] flex items-center justify-center">
+				<div class="pt-20">
+					<img class="mx-auto" width="250" src="/cart-empty.png" />
+
+					<div class="text-xl text-center mt-4">No items yet?</div>
+
+					<div v-if="true" class="flex text-center">
+						<NuxtLink
+							to="/auth"
+							class="bg-[#FD374F] w-full text-white text-[21px] font-semibold p-1.5 rounded-full mt-4">
+							Sign in
+						</NuxtLink>
+					</div>
+				</div>
+			</section>
+
+			<section
+				v-else
+				class="md:flex gap-4 justify-between mx-auto w-full">
+				<div class="md:w-[65%]">
+					<div class="bg-white rounded-lg p-4">
+						<div class="text-2xl font-bold mb-2">
+							<!-- Shopping Cart ({{ userStore.cart.length }}) -->
+							Shopping Cart (0)
+						</div>
+					</div>
+
+					<div class="bg-[#FEEEEF] rounded-lg p-4 mt-4">
+						<div class="text-red-500 font-bold">
+							Welcome Deal applicable on 1 item only
+						</div>
+					</div>
+
+					<div id="Items" class="bg-white rounded-lg p-4 mt-4">
+						<div v-for="product in products">
+							<!-- @selectedRadio is being emited -->
+							<CartItem
+								:product="product"
+								:selectedArray="selectedArray"
+								@selectedRadio="selectedRadioFunc" />
+						</div>
+					</div>
+				</div>
+
+				<div class="md:hidden block my-4" />
+
+				<div class="md:w-[35%]">
+					<div id="Summary" class="bg-white rounded-lg p-4">
+						<div class="text-2xl font-extrabold mb-2">Summary</div>
+						<div class="flex items-center justify-between my-4">
+							<div class="font-semibold">Total</div>
+							<div class="text-2xl font-semibold">
+								$
+								<span class="font-extrabold">{{
+									totalPriceComputed
+								}}</span>
+							</div>
+						</div>
+						<button
+							@click="goToCheckout"
+							class="flex items-center justify-center bg-[#FD374F] w-full text-white text-[21px] font-semibold p-1.5 rounded-full mt-4">
+							Checkout
+						</button>
+					</div>
+
+					<div
+						id="PaymentProtection"
+						class="bg-white rounded-lg p-4 mt-4">
+						<div class="text-lg font-semibold mb-2">
+							Payment methods
+						</div>
+						<div class="flex items-center justify-start gap-8 my-4">
+							<div v-for="card in cards">
+								<img class="h-6" :src="card" />
+							</div>
+						</div>
+
+						<div class="border-b" />
+
+						<div class="text-lg font-semibold mb-2 mt-2">
+							Buyer Protection
+						</div>
+						<p class="my-2">
+							Get full refund if the item is not as described or
+							if is not delivered
+						</p>
+					</div>
+				</div>
+			</section>
+		</main>
+	</MainLayout>
+</template>
+
+<script setup>
+import MainLayout from '@/layouts/MainLayout.vue'
+import { useUserStore } from '~/stores/user'
+const userStore = useUserStore()
+
+let selectedArray = ref([])
+
+onMounted(() => {
+	setTimeout(() => (userStore.isLoading = false), 200)
+})
+
+const cards = ref(['visa.png', 'mastercard.png', 'paypal.png', 'applepay.png'])
+
+const totalPriceComputed = computed(() => {
+	let price = 0
+	userStore.cart.forEach((prod) => {
+		price += prod.price
+	})
+	return price / 100
+})
+
+const selectedRadioFunc = (e) => {
+	console.log(e)
+
+	if (!selectedArray.value.length) {
+		selectedArray.value.push(e)
+		return
+	}
+
+	selectedArray.value.forEach((item, index) => {
+		// ako e.id != item.id to znaci da ne postoji u checkout, i onda cemo pushovati to u selectedArray
+		if (e.id != item.id) {
+			selectedArray.value.push(e)
+		} else {
+			// ako selektovani product vec postoji u korpi, zelimo da ga obrisemo iz selectedArray
+			selectedArray.value.splice(index, 1)
+		}
+	})
+}
+
+const goToCheckout = () => {
+	let ids = []
+	// PRVO resetujemo checkout u nista, u prazan array. DAkle kada odemo u checkout ocekujemo da bude prazan prvo, inace ce biti dupliranih produkta u checkoutu
+	userStore.checkout = []
+
+	//
+	selectedArray.value.forEach((item) => ids.push(item.id))
+
+	let res = userStore.cart.filter((item) => {
+		// vracamo item koji ima isti id
+		return ids.indexOf(item.id) != -1
+	})
+
+	// toRaw je da uklonimo Proxy wrapper koji vue stvara
+	res.forEach((item) => userStore.checkout.push(toRaw(item)))
+
+	return navigateTo('/checkout')
+}
+
+const products = [
+	{
+		id: 1,
+		title: 'Title 1',
+		description: 'This is a description',
+		url: 'https://picsum.photos/id/7/800/800',
+		price: 9999, // ovo nije 99.99 jer Stripe ne podrzava tacku, pa cemo zapravo da delimo sa 100!!!
+	},
+	{
+		id: 2,
+		title: 'Title 2',
+		description: 'This is a description',
+		url: 'https://picsum.photos/id/67/800/800',
+		price: 9999,
+	},
+	{
+		id: 3,
+		title: 'Title 3',
+		description: 'This is a description',
+		url: 'https://picsum.photos/id/13/800/800',
+		price: 9999,
+	},
+	{
+		id: 4,
+		title: 'Title 2',
+		description: 'This is a description',
+		url: 'https://picsum.photos/id/32/800/800',
+		price: 9999,
+	},
+	{
+		id: 5,
+		title: 'Title 2',
+		description: 'This is a description',
+		url: 'https://picsum.photos/id/61/800/800',
+		price: 9999,
+	},
+	{
+		id: 6,
+		title: 'Title 2',
+		description: 'This is a description',
+		url: 'https://picsum.photos/id/89/800/800',
+		price: 9999,
+	},
+	{
+		id: 7,
+		title: 'Title 2',
+		description: 'This is a description',
+		url: 'https://picsum.photos/id/1/800/800',
+		price: 9999,
+	},
+	{
+		id: 8,
+		title: 'Title 2',
+		description: 'This is a description',
+		url: 'https://picsum.photos/id/42/800/800',
+		price: 9999,
+	},
+	{
+		id: 9,
+		title: 'Title 2',
+		description: 'This is a description',
+		url: 'https://picsum.photos/id/34/800/800',
+		price: 9999,
+	},
+]
+</script>
