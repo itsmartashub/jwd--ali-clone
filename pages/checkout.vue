@@ -142,7 +142,17 @@ const userStore = useUserStore()
 const user = useSupabaseUser()
 const route = useRoute()
 
-// definePageMeta({ middleware: 'auth' })
+// definePageMeta({ middleware: ['auth'] })
+definePageMeta({ middleware: 'auth' })
+/* 
+	ELEM RECE JOHN DA MOZEMO DA REFACTORISEMO OVAJ WATHCEFFECTS I STAVIM OGA U MIDDLEWARE WTF, ALI JA NE RAZUMEM. ON JE KAO TO ZAB DA URADI< ALI KAO RADI I OVAKO 
+
+	if (route.fullPath == '/checkout' && !user.value) {
+			return navigateTo('/auth')
+		}
+		
+	i u auth.vue isto njegov watchEffects...
+*/
 
 let stripe = null
 let elements = null
@@ -251,14 +261,10 @@ const pay = async () => {
 	// AKO IMA ADRESE
 
 	isProcessing.value = true
-	console.log({ clientSecret })
-
 	// ovaj clientSecret smo dobili iz naseg paymentintent-a
 	let result = await stripe.confirmCardPayment(clientSecret, {
 		payment_method: { card: card },
 	})
-
-	console.log({ result })
 
 	if (result.error) {
 		// ERROR PART
