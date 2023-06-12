@@ -40,6 +40,7 @@
 						id="AccountMenu"
 						v-if="isAccountMenu"
 						class="absolute bg-white w-[220px] text-[#333333] z-40 top-[38px] -left-[100px] border-x border-b">
+						<!-- v-if="false" -->
 						<div v-if="!user">
 							<div class="text-semibold text-[15px] my-4 px-3">
 								Welcome to AliExpress!
@@ -61,6 +62,8 @@
 								class="text-[13px] py-2 px-4 w-full hover:bg-gray-200">
 								My Orders
 							</li>
+
+							<!-- v-if="true" -->
 							<li
 								v-if="user"
 								@click="client.auth.signOut()"
@@ -105,7 +108,7 @@
 
 						<div
 							class="absolute bg-white max-w-[700px] h-auto w-full">
-							<!-- <div
+							<div
 								v-if="items && items.data"
 								v-for="item in items.data"
 								class="p-1">
@@ -125,7 +128,9 @@
 										${{ item.price / 100 }}
 									</div>
 								</NuxtLink>
-							</div> -->
+							</div>
+
+							<!-- v-if="false" -->
 							<div class="p-1" v-if="false">
 								<NuxtLink
 									:to="`/item/1`"
@@ -151,7 +156,8 @@
 						@mouseleave="isCartHover = false">
 						<span
 							class="absolute flex items-center justify-center -right-[3px] top-0 bg-[#FF4646] h-[17px] min-w-[17px] text-xs text-white px-0.5 rounded-full">
-							0
+							<!-- 0 -->
+							{{ userStore.cart.length }}
 						</span>
 						<div class="min-w-[40px]">
 							<Icon
@@ -185,8 +191,36 @@
 import { useUserStore } from '~/stores/user'
 const userStore = useUserStore()
 
+const client = useSupabaseClient()
+const user = useSupabaseUser()
+
 let isAccountMenu = ref(false)
 let isCartHover = ref(false)
 let isSearching = ref(false)
 let searchItem = ref('')
+let items = ref(null)
+
+// ovo useDebounce() je nuxt-lodash i dostupno je u citavoj aplikaciji
+const searchByName = useDebounce(async () => {
+	isSearching.value = true // loading spinner shown
+	items.value = await useFetch(
+		`/api/prisma/search-by-name/${searchItem.value}`
+	)
+	isSearching.value = false // loading spinner hidden
+}, 100) // debounce time is 100ms, dakle zelimo da posaljem orikvest nakon 100ms non-typinga, performance-friendly
+
+watch(
+	() => searchItem.value,
+	async () => {
+		if (!searchItem.value) {
+			setTimeout(() => {
+				items.value = ''
+				isSearching.value = false
+				return
+			}, 500)
+		}
+
+		searchByName()
+	}
+)
 </script>

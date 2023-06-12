@@ -8,8 +8,8 @@
 							Shipping Address
 						</div>
 
-						<!-- <div v-if="currentAddress && currentAddress.data"> -->
-						<div v-if="false">
+						<!-- <div v-if="false"> -->
+						<div v-if="currentAddress && currentAddress.data">
 							<NuxtLink
 								to="/address"
 								class="flex items-center pb-2 text-blue-500 hover:text-red-400">
@@ -25,31 +25,31 @@
 									<li class="flex items-center gap-2">
 										<div>Contact name:</div>
 										<div class="font-bold">
-											<!-- {{ currentAddress.data.name }} -->
+											{{ currentAddress.data.name }}
 										</div>
 									</li>
 									<li class="flex items-center gap-2">
 										<div>Address:</div>
 										<div class="font-bold">
-											<!-- {{ currentAddress.data.address }} -->
+											{{ currentAddress.data.address }}
 										</div>
 									</li>
 									<li class="flex items-center gap-2">
 										<div>Zip Code:</div>
 										<div class="font-bold">
-											<!-- {{ currentAddress.data.zipcode }} -->
+											{{ currentAddress.data.zipcode }}
 										</div>
 									</li>
 									<li class="flex items-center gap-2">
 										<div>City:</div>
 										<div class="font-bold">
-											<!-- {{ currentAddress.data.city }} -->
+											{{ currentAddress.data.city }}
 										</div>
 									</li>
 									<li class="flex items-center gap-2">
 										<div>Country:</div>
 										<div class="font-bold">
-											<!-- {{ currentAddress.data.country }} -->
+											{{ currentAddress.data.country }}
 										</div>
 									</li>
 								</ul>
@@ -66,8 +66,8 @@
 					</div>
 
 					<div id="Items" class="bg-white rounded-lg p-4 mt-4">
-						<!-- <div v-for="product in userStore.checkout"> -->
-						<div v-for="product in products">
+						<!-- <div v-for="product in products"> -->
+						<div v-for="product in userStore.checkout">
 							<CheckoutItem :product="product" />
 						</div>
 					</div>
@@ -139,7 +139,7 @@
 import MainLayout from '~/layouts/MainLayout.vue'
 import { useUserStore } from '~/stores/user'
 const userStore = useUserStore()
-// const user = useSupabaseUser()
+const user = useSupabaseUser()
 const route = useRoute()
 
 // definePageMeta({ middleware: 'auth' })
@@ -153,25 +153,29 @@ let clientSecret = null
 let currentAddress = ref(null)
 let isProcessing = ref(false)
 
-// onBeforeMount(async () => {
-// 	if (userStore.checkout.length < 1) {
-// 		return navigateTo('/shoppingcart')
-// 	}
+onBeforeMount(async () => {
+	// znaci ako je checkout lista prazna, naviguj nazad u shoppingcart, jer nema potrebe da ide na checkout kad nema itema
+	if (userStore.checkout.length < 1) {
+		return navigateTo('/shoppingcart')
+	}
 
-// 	total.value = 0.0
-// 	if (user.value) {
-// 		currentAddress.value = await useFetch(
-// 			`/api/prisma/get-address-by-user/${user.value.id}`
-// 		)
-// 		setTimeout(() => (userStore.isLoading = false), 200)
-// 	}
-// })
+	total.value = 0.0
 
-// watchEffect(() => {
-// 	if (route.fullPath == '/checkout' && !user.value) {
-// 		return navigateTo('/auth')
-// 	}
-// })
+	// ako je korisnik ulogovan, dohvati mu trenutnu adresu iz backenda
+	if (user.value) {
+		currentAddress.value = await useFetch(
+			`/api/prisma/get-address-by-user/${user.value.id}`
+		)
+		setTimeout(() => (userStore.isLoading = false), 200)
+	}
+})
+
+watchEffect(() => {
+	// ako smo na checkout stranici i ako user nije ulogovan, vrati ga na auth stranicu
+	if (route.fullPath == '/checkout' && !user.value) {
+		return navigateTo('/auth')
+	}
+})
 
 onMounted(async () => {
 	isProcessing.value = true
@@ -273,6 +277,9 @@ const showError = (errorMsgText) => {
 	// }, 4000)
 }
 
+/* 
+// TEST PRODUCTS, PRE PRAVLJENJA BACKENDA
+
 const products = [
 	{
 		id: 1,
@@ -337,5 +344,5 @@ const products = [
 		url: 'https://picsum.photos/id/34/800/800',
 		price: 9999,
 	},
-]
+] */
 </script>

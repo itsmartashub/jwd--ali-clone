@@ -7,6 +7,8 @@
 			</NuxtLink>
 		</div>
 
+		<!-- {{ user }} -->
+
 		<div class="max-w-[400px] mx-auto px-2">
 			<div class="text-center my-6">Login / Register</div>
 
@@ -28,15 +30,15 @@
 </template>
 
 <script setup>
-// const client = useSupabaseClient()
-// const user = useSupabaseUser()
+const client = useSupabaseClient()
+const user = useSupabaseUser()
 
-// ako je user vec ulogovan, zelimo da navigujemo na home page, sta ce on na auth stranici??
-// watchEffect(() => {
-// 	if (user.value) {
-// 		return navigateTo('/')
-// 	}
-// })
+// ako je user vec ulogovan, zelimo da navigujemo na home page, sta ce on na auth stranici, jelte??
+watchEffect(() => {
+	if (user.value) {
+		return navigateTo('/')
+	}
+})
 
 // prov je provider (google ili github)
 const login = async (prov) => {
