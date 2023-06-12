@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
 		},
 	})
 
-	// u zavisnosti od toga koliko ovaj nas order ima itema, takodje moramo da apdejtujemo i nas OrderItem table
+	// u zavisnosti od toga koliko ovaj nas order ima itema, takodje moramo da apdejtujemo i nas OrderItem table. Joinujemo order i order items zajedno
 	body.products.forEach(async (prod) => {
 		await prisma.orderItem.create({
 			data: {

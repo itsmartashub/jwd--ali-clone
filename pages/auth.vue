@@ -33,6 +33,8 @@
 const client = useSupabaseClient()
 const user = useSupabaseUser()
 
+// console.log(user.value)
+
 // ako je user vec ulogovan, zelimo da navigujemo na home page, sta ce on na auth stranici, jelte??
 watchEffect(() => {
 	if (user.value) {

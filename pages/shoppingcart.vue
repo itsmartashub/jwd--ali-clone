@@ -122,7 +122,7 @@ const totalPriceComputed = computed(() => {
 })
 
 const selectedRadioFunc = (e) => {
-	console.log(e)
+	// console.log(e)
 
 	if (!selectedArray.value.length) {
 		selectedArray.value.push(e)
