@@ -162,6 +162,8 @@ let total = ref(0)
 let clientSecret = null
 let currentAddress = ref(null)
 let isProcessing = ref(false)
+let successMessage = ref('')
+let errorMessage = ref('')
 
 onBeforeMount(async () => {
 	// znaci ako je checkout lista prazna, naviguj nazad u shoppingcart, jer nema potrebe da ide na checkout kad nema itema
@@ -277,27 +279,58 @@ const pay = async () => {
 		console.log('SUCCESSFUL PAYMENT')
 
 		await createOrder(result.paymentIntent.id)
-		userStore.cart = [] // clear the cart
-		userStore.checkout = [] // clear the checkout
-		setTimeout(() => {
-			return navigateTo('/success') // navigiramo do /success page
-		}, 500)
+
+		if (successMessage.value == 'Item created successfully') {
+			console.log('ORDER IS COMPLETE')
+			userStore.cart = [] // clear the cart
+			userStore.checkout = [] // clear the checkout
+			setTimeout(() => {
+				return navigateTo('/success') // navigiramo do /success page
+			}, 500)
+		}
+
+		/* BITNO !!!!!!
+		u nekim instancama korpa se cleared out PRE nego sto se payment odradi, pa treba da vratimo iz api naseg response koji kaze: "The order is uncomplete" i mozes da nastavis sa clearing the cart.
+		On je ovo resio tako sto je userStore.cart = []  i userStore.checkout = [] prebacio dole u setTimeout, ali tako nikako ne treba raditi, pogotovo ne u productionu, to je ostavio nama da uradimo. AL ja nzm kako iako je kao obj. 
+		To sve jer recimo bude bagova tipa dodamo 3 itema u cart, i odradi se payment i sve super, al kad odemo u Orders (history) prikazan je samo 1 fazon.
+		
+		DAKLE, NEKI ITEMI SE CLEARED PRE NEGO STO JE REQUEST POSLAT STRIPE-u I SUPABASE API-u DA SE SACUVAJU PODACI!!! DA BISMO TO RESILI, IDEMO U API, I KADA JE SVE COMPLETED, THEN BACK TO THE RESPONSE FROM UR API SO U KNOW IT IS SAVED, SUCCESSFULLY, AND THEN CONTINOUE THE PROCESS */
+		// userStore.cart = [] // clear the cart
+		// userStore.checkout = [] // clear the checkout
+		// setTimeout(() => {
+		// 	return navigateTo('/success') // navigiramo do /success page
+		// }, 500)
 	}
 }
 
 const createOrder = async (stripeId) => {
-	await useFetch('/api/prisma/create-order', {
-		method: 'POST',
-		body: {
-			userId: user.value.id,
-			stripeId: stripeId,
-			name: currentAddress.value.data.name,
-			address: currentAddress.value.data.address,
-			zipcode: currentAddress.value.data.zipcode,
-			city: currentAddress.value.data.city,
-			country: currentAddress.value.data.country,
-			products: userStore.checkout,
-		},
+	return new Promise(async (resolve, reject) => {
+		try {
+			const response = await useFetch('/api/prisma/create-order', {
+				method: 'POST',
+				body: {
+					userId: user.value.id,
+					stripeId: stripeId,
+					name: currentAddress.value.data.name,
+					address: currentAddress.value.data.address,
+					zipcode: currentAddress.value.data.zipcode,
+					city: currentAddress.value.data.city,
+					country: currentAddress.value.data.country,
+					products: userStore.checkout,
+				},
+			})
+
+			console.log(response)
+			successMessage.value = 'Item created successfully'
+
+			// resolve(true) // ovo je da bismo izbegli infinite load, zato moramo resolve na kraju uvek
+			resolve(response)
+		} catch (error) {
+			errorMessage.value = 'An error occurred while creating the item'
+
+			console.error('Error creating item:', error)
+			reject(error)
+		}
 	})
 }
 

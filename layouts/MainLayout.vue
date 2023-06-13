@@ -200,6 +200,8 @@ let isSearching = ref(false)
 let searchItem = ref('')
 let items = ref(null)
 
+onMounted(() => (isSearching.value = false))
+
 // ovo useDebounce() je nuxt-lodash i dostupno je u citavoj aplikaciji
 const searchByName = useDebounce(async () => {
 	isSearching.value = true // loading spinner shown
